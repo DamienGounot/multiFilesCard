@@ -20,7 +20,6 @@ public class TheClient {
 	static final byte P1					= (byte)0x00;
 	static final byte P2					= (byte)0x00;
 
-	static final byte COMPAREFILES 				= (byte)0x07;
 	static final byte UPDATECARDKEY				= (byte)0x06;
 	static final byte UNCIPHERFILEBYCARD		= (byte)0x05;
 	static final byte CIPHERFILEBYCARD			= (byte)0x04;
@@ -33,7 +32,8 @@ public class TheClient {
 	static final byte P1_FILENAME 	 	= (byte)0x01;
 	static final byte P1_BLOC 	 		= (byte)0x02;
 	static final byte P1_VAR 	 		= (byte)0x03;
-	static final byte P1_LASTBLOCK 	 		= (byte)0x04;
+	static final byte P1_LASTBLOCK 	 	= (byte)0x04;
+	static final byte P1_NBFILES		= (byte)0x05;
 	static 	byte[] dataBlock = new byte[MAXLENGTH];
 	static 	byte[] cipherdataBlock = new byte[CIPHER_MAXLENGTH];
 
@@ -519,6 +519,31 @@ public class TheClient {
 
 	void listingFile(){
 
+		byte[] command = {CLA,LISTINGFILE, P1_NBFILES,P2,0x00};
+		CommandAPDU cmd = new CommandAPDU( command);
+		ResponseAPDU resp = this.sendAPDU( cmd, DISPLAY );
+
+		byte[] bytes = resp.getBytes();
+		String msg = "";
+	    for(int i=0; i<bytes.length-2;i++)
+		    msg += new StringBuffer("").append((char)(bytes[i]+48));
+		System.out.println("Number of Files: "+msg);
+
+		int nbFiles =Integer.parseInt(msg);
+
+		for (int i = 0; i < nbFiles; i++) {
+
+			byte[] commandi = {CLA,LISTINGFILE, P1, (byte) i, 0x00 };
+			CommandAPDU cmdi = new CommandAPDU( commandi);
+			ResponseAPDU respi = this.sendAPDU( cmdi, DISPLAY );
+
+			bytes = resp.getBytes();
+			System.out.print("indice: "+bytes[0]+"\t size: "+((bytes[1]*MAXLENGTH)+bytes[2])+"bytes\t filename: ");
+			msg = "";
+	    	for(int j=4; j<4+bytes[3];j++)
+		    msg += new StringBuffer("").append((char)(bytes[j]));
+			System.out.println(msg);
+		}
 	}
 
 	void exit() {
