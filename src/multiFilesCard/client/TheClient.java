@@ -474,7 +474,6 @@ public class TheClient {
 				/* envoi du DERNIER bloc */
 				System.out.println("==========Requete: Bloc==========");
 				byte[] header2 = {CLA,WRITEFILETOCARD,P1_BLOC,(byte)nbAPDUMax}; // requete de type "bloc" (contient un bloc de lastAPDUsize octets) avec P2 = indice du bloc
-				
 				byte[] optional2 = new byte[(byte)1 + lastAPDUsize];
 
 				byte[] command2 = new byte[header2.length + optional2.length];
@@ -490,7 +489,8 @@ public class TheClient {
 				System.out.println("==========Fin Requete: Bloc==========");
 				/* end */
 
-				
+
+
 				System.out.println("nbAPDUMax :"+nbAPDUMax+"; lastAPDUsize :"+lastAPDUsize+"; Total length: "+(nbAPDUMax*MAXLENGTH+lastAPDUsize)+"bytes");
 
 
@@ -538,15 +538,18 @@ public class TheClient {
 			ResponseAPDU respi = this.sendAPDU( cmdi, DISPLAY );
 
 			byte[] bytesi = respi.getBytes();
-			//System.out.println("indice: "+bytesi[0]+"\t nbAPDUMax: "+(short)((short)bytesi[1]&(short)255));
-			//System.out.println("indice: "+bytesi[0]+"\t lastAPDUsize: "+(short)((short)bytesi[2]&(short)255));
-			//System.out.println("indice: "+bytesi[0]+"\t namesize: "+(short)((short)bytesi[3]&(short)255));
+			System.out.println("indice: "+bytesi[0]+"\t nbAPDUMax: "+(short)((short)bytesi[1]&(short)255));
+			System.out.println("indice: "+bytesi[0]+"\t lastAPDUsize: "+(short)((short)bytesi[2]&(short)255));
+			System.out.println("indice: "+bytesi[0]+"\t namesize: "+(short)((short)bytesi[3]&(short)255));
 			System.out.print("File number: "+bytesi[0]+"\t size: "+((((short)((short)bytesi[1]&(short)255))*MAXLENGTH)+((short)bytesi[2]&(short)255))+" bytes\t filename: ");
 			msg = "";
 	    	 for(int j=4; j<4+bytesi[3];j++)
 		     msg += new StringBuffer("").append((char)(bytesi[j]));
 			 System.out.println(msg);
+
 		}
+
+			
 
 	}
 

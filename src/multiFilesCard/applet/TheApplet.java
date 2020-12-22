@@ -1,6 +1,5 @@
 package applet;
 
-
 import javacard.framework.*;
 import javacard.security.*;
 import javacardx.crypto.*;
@@ -221,18 +220,18 @@ public class TheApplet extends Applet {
 		}
 		else		// si ecriture fichier quelconque ----> A CHECKER
 		{
-			short nbFiles = file[0];
+			byte numFichier = buffer[3];
 			short OFFSET = 0;
-			short filenameSize = 0;
-			short nbAPDU = 0;
+			byte filenameSize = 0;
+			byte nbAPDU = 0;
 			short lastAPDUsize = 0;
-	
-			for (short i = 0; i < nbFiles; i++) {
 
-				filenameSize = file[(short)(OFFSET+1)];
-				nbAPDU = file[(short)(OFFSET + filenameSize + (short)2)];
-				lastAPDUsize = file[(short)(OFFSET + filenameSize + (short)3)];
-				OFFSET = (short) (OFFSET + filenameSize + (short)3 + (short)(nbAPDU * (short)255) + lastAPDUsize);
+			for (byte i = 0; i <= numFichier; i++) {
+
+				filenameSize = file[(short)(OFFSET+(short)1)];
+				nbAPDU = file[(short)(OFFSET + (short)filenameSize + (short)2)];
+				lastAPDUsize = file[(short)(OFFSET + (short)filenameSize + (short)3)];
+				OFFSET = (short)(OFFSET + (short)filenameSize + (short)3 + (short)((short)nbAPDU * (short)MAXLENGTH) + (short)(lastAPDUsize&(short)255)); //GOOD
 			}
 	
 			
@@ -259,35 +258,57 @@ public class TheApplet extends Applet {
 		byte[] buffer = apdu.getBuffer();
 
 		switch (buffer[2]) {
-			case P1_NBFILES:
-				Util.arrayCopy(file, (byte)(0), buffer, (byte)0, (byte)1);
-				apdu.setOutgoingAndSend((short)0, (short)1);						
+
+				case P1_NBFILES:
+					Util.arrayCopy(file, (byte)(0), buffer, (byte)0, (byte)1);
+					apdu.setOutgoingAndSend((short)0, (short)1);						
 				break;
 
 				case 0x00:
-				byte numFichier = buffer[3];
-				short OFFSET = 0;
-				byte filenameSize = 0;
-				byte nbAPDU = 0;
-				byte lastAPDUsize = 0;
 
-				for (byte i = 0; i <= numFichier; i++) {
+					byte numFichier = buffer[3];
 
-					filenameSize = file[(short)(OFFSET+(short)1)];
-					nbAPDU = file[(short)(OFFSET + (short)filenameSize + (short)2)];
-					lastAPDUsize = file[(short)(OFFSET + (short)filenameSize + (short)3)];
-					OFFSET = (short)(OFFSET + filenameSize + (short)3 + (short)((short)nbAPDU * (short)255) + (short)lastAPDUsize);
-				}
 
-				buffer[0] = numFichier; //numFichier
-				buffer[1] = nbAPDU;	//nbAPDU
-				buffer[2] = lastAPDUsize; //lastAPDUsize
-				buffer[3] = filenameSize; //filenameSize
+					if(numFichier == 0x00) // ----> si demande du premier fichier
+					{
+						byte filenameSize = file[1];
+						byte nbAPDU = file[(short)(1+filenameSize+1)];
+						byte lastAPDUsize = file[(short)(1+filenameSize+2)];
+						buffer[0] = (byte) (numFichier); // numFichier
+						buffer[1] = nbAPDU;	//nbAPDU
+						buffer[2] = lastAPDUsize; //lastAPDUsize
+						buffer[3] = filenameSize; //filenameSize
+						Util.arrayCopy(file,(short)2, buffer, (byte)4, buffer[3]); //filename
+						apdu.setOutgoingAndSend((short)0, (short)((short)4+buffer[3]));
 
-				Util.arrayCopy(file, (short)(OFFSET+2), buffer, (byte)4, buffer[3]); //filename
-				apdu.setOutgoingAndSend((short)0, (short)(4+buffer[3]));
-				
-				
+					}
+					else		// ----> si demande de fichier quelconque A CHECKER
+					{
+						short OFFSET = 0;
+						byte filenameSize = 0;
+						byte nbAPDU = 0;
+						short lastAPDUsize = 0;
+	
+						for (byte i = 0; i <= numFichier; i++) {
+	
+							filenameSize = file[(short)(OFFSET+(short)1)];
+							nbAPDU = file[(short)(OFFSET + (short)filenameSize + (short)2)];
+							lastAPDUsize = file[(short)(OFFSET + (short)filenameSize + (short)3)];
+	
+							OFFSET = (short)(OFFSET + (short)filenameSize + (short)3 + (short)((short)nbAPDU * (short)MAXLENGTH) + (short)((short)lastAPDUsize&(short)255)); //GOOD
+						}
+	
+						buffer[0] = numFichier; //numFichier
+						buffer[1] = nbAPDU;	//nbAPDU
+						buffer[2] = (byte) lastAPDUsize; // lastAPDUsize
+						buffer[3] = filenameSize; //filenameSize
+	
+						Util.arrayCopy(file, (short)(OFFSET+(short)2), buffer, (byte)4, buffer[3]); //filename
+						apdu.setOutgoingAndSend((short)0, (short)((short)4+buffer[3]));
+					}
+
+					
+					
 				break;		
 			default:
 				break;
