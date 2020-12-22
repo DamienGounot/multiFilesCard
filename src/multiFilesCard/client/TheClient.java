@@ -230,14 +230,16 @@ public class TheClient {
 
 
 	void cipherFileByCard() {
-		System.out.println("Saisissez le nom du fichier a chiffrer: ");
-		String filename = readKeyboard();
+		System.out.println("Select input file: ");
+		String inputfilename = readKeyboard();
+		System.out.println("Select output file: ");
+		String outputfilename = readKeyboard();
 		byte[] response;
 
 
 		try{
-				DataInputStream filedata = new DataInputStream(new FileInputStream(filename));
-				DataOutputStream cipherdata = new DataOutputStream(new FileOutputStream("cipher_"+filename));
+				DataInputStream filedata = new DataInputStream(new FileInputStream(inputfilename));
+				DataOutputStream cipherdata = new DataOutputStream(new FileOutputStream(outputfilename));
 			
 				int return_value = 0;
 
