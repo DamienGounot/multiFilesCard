@@ -1,2 +1,17 @@
-./out/*
+out/multiFilesCard/applet.cap
 
+out/multiFilesCard/applet/javacard/applet.cap
+
+out/multiFilesCard/applet/javacard/applet.cap.transf
+
+out/multiFilesCard/applet/javacard/applet.exp
+
+out/multiFilesCard/applet/javacard/applet.jca
+
+out/multiFilesCard/applet/TheApplet.class
+
+out/multiFilesCard/client/TheClient.class
+
+out/multiFilesCard/script.scr
+
+scripts.win32/retour_coucou.png

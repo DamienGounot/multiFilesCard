@@ -190,14 +190,16 @@ public class TheClient {
 
 
 	void uncipherFileByCard() {
-		System.out.println("Saisissez le nom du fichier a dechiffrer: ");
-		String filename = readKeyboard();
+		System.out.println("Select input file (cipher): ");
+		String inputfilename = readKeyboard();
+		System.out.println("Select output file (plaintext): ");
+		String outputfilename = readKeyboard();		
 		byte[] response;
 
 
 		try{
-				DataInputStream filedata = new DataInputStream(new FileInputStream(filename));
-				DataOutputStream uncipherdata = new DataOutputStream(new FileOutputStream("uncipher_"+filename));
+				DataInputStream filedata = new DataInputStream(new FileInputStream(inputfilename));
+				DataOutputStream uncipherdata = new DataOutputStream(new FileOutputStream(outputfilename));
 			
 				int return_value = 0;
 
@@ -230,14 +232,16 @@ public class TheClient {
 
 
 	void cipherFileByCard() {
-		System.out.println("Saisissez le nom du fichier a chiffrer: ");
-		String filename = readKeyboard();
+		System.out.println("Select input file (plaintext): ");
+		String inputfilename = readKeyboard();
+		System.out.println("Select output file (cipher): ");
+		String outputfilename = readKeyboard();
 		byte[] response;
 
 
 		try{
-				DataInputStream filedata = new DataInputStream(new FileInputStream(filename));
-				DataOutputStream cipherdata = new DataOutputStream(new FileOutputStream("cipher_"+filename));
+				DataInputStream filedata = new DataInputStream(new FileInputStream(inputfilename));
+				DataOutputStream cipherdata = new DataOutputStream(new FileOutputStream(outputfilename));
 			
 				int return_value = 0;
 
