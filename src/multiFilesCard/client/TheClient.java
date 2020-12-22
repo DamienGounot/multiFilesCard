@@ -533,17 +533,21 @@ public class TheClient {
 
 		for (int i = 0; i < nbFiles; i++) {
 
-			byte[] commandi = {CLA,LISTINGFILE, P1, (byte) i, 0x00 };
+			byte[] commandi = {CLA,LISTINGFILE, 0x00, (byte)i, 0x00 };
 			CommandAPDU cmdi = new CommandAPDU( commandi);
 			ResponseAPDU respi = this.sendAPDU( cmdi, DISPLAY );
 
-			bytes = resp.getBytes();
-			System.out.print("indice: "+bytes[0]+"\t size: "+((bytes[1]*MAXLENGTH)+bytes[2])+"bytes\t filename: ");
+			byte[] bytesi = respi.getBytes();
+			//System.out.println("indice: "+bytesi[0]+"\t nbAPDUMax: "+(short)((short)bytesi[1]&(short)255));
+			//System.out.println("indice: "+bytesi[0]+"\t lastAPDUsize: "+(short)((short)bytesi[2]&(short)255));
+			//System.out.println("indice: "+bytesi[0]+"\t namesize: "+(short)((short)bytesi[3]&(short)255));
+			System.out.print("File number: "+bytesi[0]+"\t size: "+((((short)((short)bytesi[1]&(short)255))*MAXLENGTH)+((short)bytesi[2]&(short)255))+" bytes\t filename: ");
 			msg = "";
-	    	for(int j=4; j<4+bytes[3];j++)
-		    msg += new StringBuffer("").append((char)(bytes[j]));
-			System.out.println(msg);
+	    	 for(int j=4; j<4+bytesi[3];j++)
+		     msg += new StringBuffer("").append((char)(bytesi[j]));
+			 System.out.println(msg);
 		}
+
 	}
 
 	void exit() {

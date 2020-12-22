@@ -14,7 +14,6 @@ public class TheApplet extends Applet {
 	static final byte P1					= (byte)0x00;
 	static final byte P2					= (byte)0x00;
 
-	static final byte COMPAREFILES 				= (byte)0x07;
 	static final byte UPDATECARDKEY				= (byte)0x06;
 	static final byte UNCIPHERFILEBYCARD		= (byte)0x05;
 	static final byte CIPHERFILEBYCARD			= (byte)0x04;
@@ -26,10 +25,10 @@ public class TheApplet extends Applet {
 	static final byte P1_FILENAME 	 	= (byte)0x01;
 	static final byte P1_BLOC 	 		= (byte)0x02;
 	static final byte P1_VAR 	 		= (byte)0x03;
-	static final byte P1_LASTBLOCK 	 		= (byte)0x04;
+	static final byte P1_LASTBLOCK 		= (byte)0x04;
+	static final byte P1_NBFILES		= (byte)0x05;
 
 	static byte[] file = new byte[16384]; // 16Ko
-
 	private final static byte INS_DES_ECB_NOPAD_ENC           	= (byte)0x20;
     private final static byte INS_DES_ECB_NOPAD_DEC           	= (byte)0x21;
 
@@ -116,7 +115,6 @@ public class TheApplet extends Applet {
 		byte[] buffer = apdu.getBuffer();
 
 		switch( buffer[1] ) 	{
-			case COMPAREFILES: compareFile( apdu ); break;
 			case UPDATECARDKEY: updateCardKey( apdu ); break;
 			case UNCIPHERFILEBYCARD: uncipherFileByCard( apdu ); break;
 			case CIPHERFILEBYCARD: cipherFileByCard( apdu ); break;
@@ -125,10 +123,6 @@ public class TheApplet extends Applet {
 			case LISTINGFILE: listingFile( apdu ); break;
 			default: ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
 		}
-	}
-
-	void compareFile( APDU apdu ){
-		
 	}
 
 	void updateCardKey( APDU apdu ) {
@@ -157,8 +151,6 @@ public class TheApplet extends Applet {
 
 
 	void readFileFromCard( APDU apdu ) {
-
-
 		byte[] buffer = apdu.getBuffer();  
 		apdu.setIncomingAndReceive();
 		
@@ -206,24 +198,100 @@ public class TheApplet extends Applet {
 	void writeFileToCard( APDU apdu ) {
 		byte[] buffer = apdu.getBuffer();  
 		apdu.setIncomingAndReceive();
-		
-		switch(buffer[2]){
-			case P1_FILENAME:
-			Util.arrayCopy(buffer, (byte)4, file, (byte)0, (byte)(buffer[4]+(byte)1));
-			break;
-			case P1_BLOC:
-			short offset = (short)((((byte)1 + file[0] + (byte)2) + (buffer[3] * (short)MAXLENGTH)));
 
-			Util.arrayCopy(buffer, (byte)5, file, offset, (short)(buffer[4]&(short)255));
-			break;
-			case P1_VAR:
-			Util.arrayCopy(buffer, (byte)5, file, (byte)((byte)1 + file[0]),(short)(buffer[4]&(short)255));
-			break;
-			default:
+
+
+		if(file[0]==0x00) // si ecriture du premier fichier
+		{
+			switch(buffer[2]){
+				case P1_FILENAME:
+				Util.arrayCopy(buffer, (byte)4, file, (byte)1, (byte)(buffer[4]+(byte)1));
+				break;
+				case P1_BLOC:
+				short offset = (short)((((byte)2 + file[1] + (byte)2) + (buffer[3] * (short)MAXLENGTH)));
+	
+				Util.arrayCopy(buffer, (byte)5, file, offset, (short)(buffer[4]&(short)255));
+				break;
+				case P1_VAR:
+				Util.arrayCopy(buffer, (byte)5, file, (byte)((byte)2 + file[1]),(short)(buffer[4]&(short)255));
+				file[0] = (byte) (file[0] + 1);
+				break;
+				default:
+			}
 		}
+		else		// si ecriture fichier quelconque ----> A CHECKER
+		{
+			short nbFiles = file[0];
+			short OFFSET = 0;
+			short filenameSize = 0;
+			short nbAPDU = 0;
+			short lastAPDUsize = 0;
+	
+			for (short i = 0; i < nbFiles; i++) {
+
+				filenameSize = file[(short)(OFFSET+1)];
+				nbAPDU = file[(short)(OFFSET + filenameSize + (short)2)];
+				lastAPDUsize = file[(short)(OFFSET + filenameSize + (short)3)];
+				OFFSET = (short) (OFFSET + filenameSize + (short)3 + (short)(nbAPDU * (short)255) + lastAPDUsize);
+			}
+	
+			
+			switch(buffer[2]){
+				case P1_FILENAME:
+				Util.arrayCopy(buffer, (byte)4, file, (short)(OFFSET+1), (byte)(buffer[4]+(byte)1));
+				break;
+				case P1_BLOC:
+				short offset = (short)((OFFSET +((byte)1 + file[(short)(OFFSET+(short)1)] + (byte)2) + (buffer[3] * (short)MAXLENGTH)));
+	
+				Util.arrayCopy(buffer, (byte)5, file, offset, (short)(buffer[4]&(short)255));
+				break;
+				case P1_VAR:
+				Util.arrayCopy(buffer, (byte)5, file, (short)(OFFSET + file[(short)(OFFSET+(short)1)]+(short)2),(short)(buffer[4]&(short)255));
+				file[0] = (byte) (file[0] + 1);
+				break;
+				default:
+			}
+		}
+
 	}
 
 	void listingFile( APDU apdu ){
+		byte[] buffer = apdu.getBuffer();
+
+		switch (buffer[2]) {
+			case P1_NBFILES:
+				Util.arrayCopy(file, (byte)(0), buffer, (byte)0, (byte)1);
+				apdu.setOutgoingAndSend((short)0, (short)1);						
+				break;
+
+				case 0x00:
+				byte numFichier = buffer[3];
+				short OFFSET = 0;
+				byte filenameSize = 0;
+				byte nbAPDU = 0;
+				byte lastAPDUsize = 0;
+
+				for (byte i = 0; i <= numFichier; i++) {
+
+					filenameSize = file[(short)(OFFSET+(short)1)];
+					nbAPDU = file[(short)(OFFSET + (short)filenameSize + (short)2)];
+					lastAPDUsize = file[(short)(OFFSET + (short)filenameSize + (short)3)];
+					OFFSET = (short)(OFFSET + filenameSize + (short)3 + (short)((short)nbAPDU * (short)255) + (short)lastAPDUsize);
+				}
+
+				buffer[0] = numFichier; //numFichier
+				buffer[1] = nbAPDU;	//nbAPDU
+				buffer[2] = lastAPDUsize; //lastAPDUsize
+				buffer[3] = filenameSize; //filenameSize
+
+				Util.arrayCopy(file, (short)(OFFSET+2), buffer, (byte)4, buffer[3]); //filename
+				apdu.setOutgoingAndSend((short)0, (short)(4+buffer[3]));
+				
+				
+				break;		
+			default:
+				break;
+		}
 
 	}
 
