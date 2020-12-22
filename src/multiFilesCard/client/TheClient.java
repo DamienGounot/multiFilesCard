@@ -2,6 +2,8 @@ package client;
 
 import java.util.Date;
 import java.io.*;
+import java.security.MessageDigest;
+
 import opencard.core.service.*;
 import opencard.core.terminal.*;
 import opencard.core.util.*;
@@ -160,7 +162,40 @@ public class TheClient {
 	}
 
 	void compareFile(){
+		System.out.println("Select first file: ");
+		String path1 = readKeyboard();
+		System.out.println("Select second file: ");
+		String path2 = readKeyboard();
+
+		File file1 = new File(path1);
+		File file2 = new File(path2);
+		try {
+			MessageDigest md5Digest = MessageDigest.getInstance("MD5");
+			MessageDigest shaDigest = MessageDigest.getInstance("SHA-256");
+	
+			String md5checksum1 = getFileChecksum(md5Digest, file1);
+			String shaChecksum1 = getFileChecksum(shaDigest, file1);
+			String md5checksum2 = getFileChecksum(md5Digest, file2);
+			String shaChecksum2 = getFileChecksum(shaDigest, file2);
+			
+			System.out.print("MD5:\t"+path1+": " + md5checksum1 + "\t"+path2+": "+md5checksum2);
+			if(md5checksum1.equals(md5checksum2)){
+				System.out.println("\t ----> GOOD");
+			}else{
+				System.out.println("\t ----> BAD");
+			}
+
+			System.out.print("SHA-256:\t"+path1+": " + shaChecksum1 + "\t"+path2+": "+shaChecksum2);
+			if(shaChecksum1.equals(shaChecksum2)){
+				System.out.println("\t ----> GOOD");
+			}else{
+				System.out.println("\t ----> BAD");
+			}
+		} catch (Exception e) {
+			System.out.println(e.getStackTrace());
+		}
 		
+
 	}
 
 
@@ -533,10 +568,10 @@ public class TheClient {
 
 	void printMenu() {
 		System.out.println( "" );
-		System.out.println( "7: Compare two files (saisie clavier des noms des deux fichiers) (NB: process fait uniquement cote Client)" );
-		System.out.println( "6: Changer DES key (saisie clavier de la clef)" );
-		System.out.println( "5: Uncipher file using DES (saisie clavier des noms des fichiers d entree et de sortie)" );
-		System.out.println( "4: Cipher file using DES (saisie clavier des noms des fichiers d entree et de sortie)" );
+		System.out.println( "7: Compare two files" );
+		System.out.println( "6: Changer DES key" );
+		System.out.println( "5: Uncipher file using DES" );
+		System.out.println( "4: Cipher file using DES" );
 		System.out.println( "3: Read file from card (saisie clavier du numero)" );
 		System.out.println( "2: Write file to card" );
 		System.out.println( "1: Listing Files" );
@@ -588,5 +623,37 @@ public class TheClient {
 		new TheClient();
 	}
 
+
+private static String getFileChecksum(MessageDigest digest, File file) throws IOException
+{
+    //Get file input stream for reading the file content
+    FileInputStream fis = new FileInputStream(file);
+     
+    //Create byte array to read data in chunks
+    byte[] byteArray = new byte[1024];
+    int bytesCount = 0; 
+      
+    //Read file data and update in message digest
+    while ((bytesCount = fis.read(byteArray)) != -1) {
+        digest.update(byteArray, 0, bytesCount);
+    };
+     
+    //close the stream; We don't need it now.
+    fis.close();
+     
+    //Get the hash's bytes
+    byte[] bytes = digest.digest();
+     
+    //This bytes[] has bytes in decimal format;
+    //Convert it to hexadecimal format
+    StringBuilder sb = new StringBuilder();
+    for(int i=0; i< bytes.length ;i++)
+    {
+        sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
+    }
+     
+    //return complete hash
+   return sb.toString();
+}
 
 }
