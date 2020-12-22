@@ -34,6 +34,7 @@ public class TheClient {
 	static final byte P1_VAR 	 		= (byte)0x03;
 	static final byte P1_LASTBLOCK 	 	= (byte)0x04;
 	static final byte P1_NBFILES		= (byte)0x05;
+	static final byte P1_FILEINFO		= (byte)0x06;
 	static 	byte[] dataBlock = new byte[MAXLENGTH];
 	static 	byte[] cipherdataBlock = new byte[CIPHER_MAXLENGTH];
 
@@ -533,7 +534,7 @@ public class TheClient {
 
 		for (int i = 0; i < nbFiles; i++) {
 
-			byte[] commandi = {CLA,LISTINGFILE, 0x00, (byte)i, 0x00 };
+			byte[] commandi = {CLA,LISTINGFILE, P1_FILEINFO, (byte)i, 0x00 };
 			CommandAPDU cmdi = new CommandAPDU( commandi);
 			ResponseAPDU respi = this.sendAPDU( cmdi, DISPLAY );
 
@@ -548,7 +549,6 @@ public class TheClient {
 			 System.out.println(msg);
 
 		}	
-
 	}
 
 	void exit() {

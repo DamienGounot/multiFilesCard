@@ -26,6 +26,7 @@ public class TheApplet extends Applet {
 	static final byte P1_VAR 	 		= (byte)0x03;
 	static final byte P1_LASTBLOCK 		= (byte)0x04;
 	static final byte P1_NBFILES		= (byte)0x05;
+	static final byte P1_FILEINFO		= (byte)0x06;
 
 	static byte[] file = new byte[16384]; // 16Ko
 	private final static byte INS_DES_ECB_NOPAD_ENC           	= (byte)0x20;
@@ -265,7 +266,7 @@ public class TheApplet extends Applet {
 					apdu.setOutgoingAndSend((short)0, (short)1);						
 				break;
 
-				case 0x00:
+				case P1_FILEINFO:
 
 					byte indiceFichier = buffer[3];
 
@@ -274,10 +275,10 @@ public class TheApplet extends Applet {
 					{
 						byte filenameSize = file[1];
 						byte nbAPDU = file[(short)(1+filenameSize+1)];
-						byte lastAPDUsize = file[(short)(1+filenameSize+2)];
+						short lastAPDUsize = file[(short)(1+filenameSize+2)];
 						buffer[0] = (byte) (indiceFichier); // indiceFichier
 						buffer[1] = nbAPDU;	//nbAPDU
-						buffer[2] = lastAPDUsize; //lastAPDUsize
+						buffer[2] = (byte)lastAPDUsize; //lastAPDUsize
 						buffer[3] = filenameSize; //filenameSize
 						Util.arrayCopy(file,(short)2, buffer, (byte)4, buffer[3]); //filename
 						apdu.setOutgoingAndSend((short)0, (short)((short)4+buffer[3]));
@@ -298,12 +299,19 @@ public class TheApplet extends Applet {
 	
 							OFFSET = (short)(OFFSET + (short)filenameSize + (short)3 + (short)((short)nbAPDU * (short)MAXLENGTH) + (short)((short)lastAPDUsize&(short)255)); //GOOD
 						}
-	
-						buffer[0] = indiceFichier; //indiceFichier
+						
+						filenameSize = file[(short)(OFFSET+(short)1)];
+						nbAPDU = file[(short)(OFFSET + (short)filenameSize + (short)2)];
+						lastAPDUsize = file[(short)(OFFSET + (short)filenameSize + (short)3)];
+						
+							/* NB: ERREUR ICI JE REMPLISSAIS AVEC LES INFOS QUI M'ON PERMI DE ME DECALLER , PAS LES INFOS OFFSETTEES EN ELLES MEME !!!*/
+						
+						buffer[0] = indiceFichier; //indiceFichier 
 						buffer[1] = nbAPDU;	//nbAPDU
 						buffer[2] = (byte) lastAPDUsize; // lastAPDUsize
 						buffer[3] = filenameSize; //filenameSize
-	
+						
+
 						Util.arrayCopy(file, (short)(OFFSET+(short)2), buffer, (byte)4, buffer[3]); //filename
 						apdu.setOutgoingAndSend((short)0, (short)((short)4+buffer[3]));
 					}
