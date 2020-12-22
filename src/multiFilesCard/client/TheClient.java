@@ -547,9 +547,7 @@ public class TheClient {
 		     msg += new StringBuffer("").append((char)(bytesi[j]));
 			 System.out.println(msg);
 
-		}
-
-			
+		}	
 
 	}
 

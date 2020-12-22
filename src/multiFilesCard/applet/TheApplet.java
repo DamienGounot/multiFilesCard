@@ -199,7 +199,6 @@ public class TheApplet extends Applet {
 		apdu.setIncomingAndReceive();
 
 
-
 		if(file[0]==0x00) // si ecriture du premier fichier
 		{
 			switch(buffer[2]){
@@ -213,25 +212,26 @@ public class TheApplet extends Applet {
 				break;
 				case P1_VAR:
 				Util.arrayCopy(buffer, (byte)5, file, (byte)((byte)2 + file[1]),(short)(buffer[4]&(short)255));
-				file[0] = (byte) (file[0] + 1);
+				file[0] = (byte) (file[0] + (byte)1);
 				break;
 				default:
 			}
 		}
 		else		// si ecriture fichier quelconque ----> A CHECKER
 		{
-			byte numFichier = buffer[3];
+			byte numFichier = file[0];
 			short OFFSET = 0;
 			byte filenameSize = 0;
 			byte nbAPDU = 0;
 			short lastAPDUsize = 0;
 
-			for (byte i = 0; i <= numFichier; i++) {
+			for (byte i = 0; i < numFichier; i++) {
 
 				filenameSize = file[(short)(OFFSET+(short)1)];
 				nbAPDU = file[(short)(OFFSET + (short)filenameSize + (short)2)];
 				lastAPDUsize = file[(short)(OFFSET + (short)filenameSize + (short)3)];
-				OFFSET = (short)(OFFSET + (short)filenameSize + (short)3 + (short)((short)nbAPDU * (short)MAXLENGTH) + (short)(lastAPDUsize&(short)255)); //GOOD
+
+				OFFSET = (short)(OFFSET + (short)((short)filenameSize + (short)3 + (short)((short)nbAPDU * (short)MAXLENGTH) + (short)(lastAPDUsize&(short)255))); //GOOD
 			}
 	
 			
@@ -240,9 +240,10 @@ public class TheApplet extends Applet {
 				Util.arrayCopy(buffer, (byte)4, file, (short)(OFFSET+1), (byte)(buffer[4]+(byte)1));
 				break;
 				case P1_BLOC:
-				short offset = (short)((OFFSET +((byte)1 + file[(short)(OFFSET+(short)1)] + (byte)2) + (buffer[3] * (short)MAXLENGTH)));
+
+				short offset_bloc = (short)((OFFSET +(short)((short)1 + file[(short)(OFFSET+(short)1)] + (short)3) + (buffer[3] * (short)MAXLENGTH)));
 	
-				Util.arrayCopy(buffer, (byte)5, file, offset, (short)(buffer[4]&(short)255));
+				Util.arrayCopy(buffer, (byte)5, file, offset_bloc, (short)(buffer[4]&(short)255));
 				break;
 				case P1_VAR:
 				Util.arrayCopy(buffer, (byte)5, file, (short)(OFFSET + file[(short)(OFFSET+(short)1)]+(short)2),(short)(buffer[4]&(short)255));
@@ -266,15 +267,15 @@ public class TheApplet extends Applet {
 
 				case 0x00:
 
-					byte numFichier = buffer[3];
+					byte indiceFichier = buffer[3];
 
 
-					if(numFichier == 0x00) // ----> si demande du premier fichier
+					if(indiceFichier == 0x00) // ----> si demande du premier fichier
 					{
 						byte filenameSize = file[1];
 						byte nbAPDU = file[(short)(1+filenameSize+1)];
 						byte lastAPDUsize = file[(short)(1+filenameSize+2)];
-						buffer[0] = (byte) (numFichier); // numFichier
+						buffer[0] = (byte) (indiceFichier); // indiceFichier
 						buffer[1] = nbAPDU;	//nbAPDU
 						buffer[2] = lastAPDUsize; //lastAPDUsize
 						buffer[3] = filenameSize; //filenameSize
@@ -289,7 +290,7 @@ public class TheApplet extends Applet {
 						byte nbAPDU = 0;
 						short lastAPDUsize = 0;
 	
-						for (byte i = 0; i <= numFichier; i++) {
+						for (byte i = 0; i < indiceFichier; i++) {
 	
 							filenameSize = file[(short)(OFFSET+(short)1)];
 							nbAPDU = file[(short)(OFFSET + (short)filenameSize + (short)2)];
@@ -298,7 +299,7 @@ public class TheApplet extends Applet {
 							OFFSET = (short)(OFFSET + (short)filenameSize + (short)3 + (short)((short)nbAPDU * (short)MAXLENGTH) + (short)((short)lastAPDUsize&(short)255)); //GOOD
 						}
 	
-						buffer[0] = numFichier; //numFichier
+						buffer[0] = indiceFichier; //indiceFichier
 						buffer[1] = nbAPDU;	//nbAPDU
 						buffer[2] = (byte) lastAPDUsize; // lastAPDUsize
 						buffer[3] = filenameSize; //filenameSize
