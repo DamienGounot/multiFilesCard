@@ -27,7 +27,8 @@ public class TheApplet extends Applet {
 	static final byte P1_LASTBLOCK 		= (byte)0x04;
 	static final byte P1_NBFILES		= (byte)0x05;
 	static final byte P1_FILEINFO		= (byte)0x06;
-
+	static final byte P1_OFFSET 	 	= (byte)0x07;
+	
 	static byte[] file = new byte[16384]; // 16Ko
 	private final static byte INS_DES_ECB_NOPAD_ENC           	= (byte)0x20;
     private final static byte INS_DES_ECB_NOPAD_DEC           	= (byte)0x21;

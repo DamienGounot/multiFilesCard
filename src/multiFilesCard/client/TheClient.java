@@ -29,12 +29,15 @@ public class TheClient {
 
 	final static short MAXLENGTH = 255;
 	final static short CIPHER_MAXLENGTH = 240;
+	
 	static final byte P1_FILENAME 	 	= (byte)0x01;
 	static final byte P1_BLOC 	 		= (byte)0x02;
 	static final byte P1_VAR 	 		= (byte)0x03;
 	static final byte P1_LASTBLOCK 	 	= (byte)0x04;
 	static final byte P1_NBFILES		= (byte)0x05;
 	static final byte P1_FILEINFO		= (byte)0x06;
+	static final byte P1_OFFSET 	 	= (byte)0x07;
+	
 	static 	byte[] dataBlock = new byte[MAXLENGTH];
 	static 	byte[] cipherdataBlock = new byte[CIPHER_MAXLENGTH];
 
@@ -316,6 +319,46 @@ public class TheClient {
 	}
 
 	void readFileFromCard() {
+
+		String input ="";
+		int nbFiles = 0;
+		int filerequested = 0;
+
+
+						/*Get Number of File*/
+						byte[] command0 = {CLA,LISTINGFILE, P1_NBFILES,P2,0x00};
+						CommandAPDU cmd0 = new CommandAPDU( command0);
+						ResponseAPDU resp0 = this.sendAPDU( cmd0, DISPLAY );
+				
+						byte[] bytes0 = resp0.getBytes();
+						String msg = "";
+						for(int i=0; i<bytes0.length-2;i++)
+							msg += new StringBuffer("").append((char)(bytes0[i]+48));
+						System.out.println("Number of Files: "+msg);
+				
+						nbFiles =Integer.parseInt(msg);
+						/*end*/
+
+						if(nbFiles == 0){
+							System.out.println("Error: No file onboard !");
+							return;
+						}
+
+				do{
+					System.out.println("Select your file (number):");
+					input = readKeyboard();
+				}while(!isNumeric(input));
+				filerequested = Integer.parseInt(input);
+
+
+				if(filerequested<0 || filerequested>(nbFiles-1)){
+					System.out.println("Error invalid file number");
+					return;
+				}else{
+					System.out.println("Valid file number (nbFiles: "+nbFiles+") (RequestNumber: "+filerequested+")");
+				}
+
+			
 
 		/* Read filename */
 		System.out.println("==========Requete: Filename==========");
@@ -684,6 +727,24 @@ private static String getFileChecksum(MessageDigest digest, File file) throws IO
      
     //return complete hash
    return sb.toString();
+}
+
+
+private static boolean isNumeric(String str) {
+
+	// null or empty
+	if (str == null || str.length() == 0) {
+		return false;
+	}
+
+	for (char c : str.toCharArray()) {
+		if (!Character.isDigit(c)) {
+			return false;
+		}
+	}
+
+	return true;
+
 }
 
 }
