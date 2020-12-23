@@ -184,7 +184,6 @@ public class TheApplet extends Applet {
 			case P1_BLOC:
 
 					/* envoi d'un bloc */
-					//short offset = (short)((((byte)1 + file[0] + (byte)2) + (buffer[3] * (short)MAXLENGTH)));
 					short offset = (short)(OFFSET_VALUE+(short)1+(short)file[(short)(OFFSET_VALUE+(short)1)]+(short)3+(short)(buffer[3] * (short)MAXLENGTH));
 					buffer = apdu.getBuffer();
 					Util.arrayCopy(file, offset, buffer, (byte)0, (short)MAXLENGTH);
@@ -195,12 +194,10 @@ public class TheApplet extends Applet {
 
 					
 					/* envoi du dernier bloc */
-					//byte nbAPDUMax = file[(byte)(file[0]+(byte)1)];
-					//byte lastAPDU = file[(byte)(file[0]+(byte)2)];
 					byte nbAPDUMAx = file[(short)(OFFSET_VALUE+(short)1+(short)file[(short)(OFFSET_VALUE+(short)1)]+(short)1)];
 					byte lastAPDU = file[(short)(OFFSET_VALUE+(short)1+(short)file[(short)(OFFSET_VALUE+(short)1)]+(short)2)];
-					//short offset_last = (short)((((byte)1 + (byte)file[0]) + (byte)2) + ((byte)(nbAPDUMax) * (short)MAXLENGTH));
 					short offset_last = (short)(OFFSET_VALUE+(short)1+(short)file[(short)(OFFSET_VALUE+(short)1)]+(short)3+(short)(nbAPDUMAx * (short)MAXLENGTH));
+					
 					buffer = apdu.getBuffer();
 					Util.arrayCopy(file, offset_last, buffer, (byte)0, (short)(lastAPDU&(short)255));
 					apdu.setOutgoingAndSend((short)0, (short)(lastAPDU&(short)255));
@@ -306,7 +303,7 @@ public class TheApplet extends Applet {
 						apdu.setOutgoingAndSend((short)0, (short)((short)4+buffer[3]));
 
 					}
-					else		// ----> si demande de fichier quelconque A CHECKER
+					else		// ----> si demande de fichier quelconque 
 					{
 						short OFFSET = 0;
 						byte filenameSize = 0;
@@ -326,7 +323,6 @@ public class TheApplet extends Applet {
 						nbAPDU = file[(short)(OFFSET + (short)filenameSize + (short)2)];
 						lastAPDUsize = file[(short)(OFFSET + (short)filenameSize + (short)3)];
 						
-							/* NB: ERREUR ICI JE REMPLISSAIS AVEC LES INFOS QUI M'ON PERMI DE ME DECALLER , PAS LES INFOS OFFSETTEES EN ELLES MEME !!!*/
 						
 						buffer[0] = indiceFichier; //indiceFichier 
 						buffer[1] = nbAPDU;	//nbAPDU
@@ -338,8 +334,6 @@ public class TheApplet extends Applet {
 						apdu.setOutgoingAndSend((short)0, (short)((short)4+buffer[3]));
 					}
 
-					
-					
 				break;		
 			default:
 				break;
