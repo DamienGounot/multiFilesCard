@@ -358,24 +358,31 @@ public class TheClient {
 					System.out.println("Valid file number (nbFiles: "+nbFiles+") (RequestNumber: "+filerequested+")");
 				}
 
-			
+				/* Send OFFSET to Applet */
+				System.out.println("==========Requete: Sending OFFSET==========");
+				byte[] command = {CLA,READFILEFROMCARD, P1_OFFSET,(byte)filerequested}; 
+				CommandAPDU cmd = new CommandAPDU( command);
+				ResponseAPDU resp = this.sendAPDU( cmd, DISPLAY );
+				System.out.println("==========Fin Requete: Sending OFFSET==========");
+				/* end */
+
 
 		/* Read filename */
 		System.out.println("==========Requete: Filename==========");
-		byte[] header = {CLA,READFILEFROMCARD, P1_FILENAME,P2}; 
-		byte[] optional = {0x00};
-		byte[] command = new byte[(byte)header.length + (byte)optional.length];
-		System.arraycopy(header,(byte)0,command,(byte)0,(byte)header.length);
-		System.arraycopy(optional,(byte)0,command,(byte)header.length,(byte)optional.length);
-		CommandAPDU cmd = new CommandAPDU( command);
-		ResponseAPDU resp = this.sendAPDU( cmd, DISPLAY );
+		byte[] header10 = {CLA,READFILEFROMCARD, P1_FILENAME,P2}; 
+		byte[] optional10 = {0x00};
+		byte[] command10 = new byte[(byte)header10.length + (byte)optional10.length];
+		System.arraycopy(header10,(byte)0,command10,(byte)0,(byte)header10.length);
+		System.arraycopy(optional10,(byte)0,command10,(byte)header10.length,(byte)optional10.length);
+		CommandAPDU cmd10 = new CommandAPDU( command10);
+		ResponseAPDU resp10 = this.sendAPDU( cmd10, DISPLAY );
 		System.out.println("==========Fin Requete: Filename==========");
 		/* end */
 
-		byte[] bytes = resp.getBytes();
+		byte[] bytes10 = resp10.getBytes();
 		String filename = "";
-	    for(int i=0; i<bytes.length-2;i++)
-		filename += new StringBuffer("").append((char)bytes[i]);
+	    for(int i=0; i<bytes10.length-2;i++)
+		filename += new StringBuffer("").append((char)bytes10[i]);
 
 
 
@@ -391,9 +398,9 @@ public class TheClient {
 		System.out.println("==========Fin Requete: Valeurs Variables==========");
 		/* end */
 
-		bytes = resp1.getBytes();
-		int nbAPDUMax = bytes[0];
-		int lastAPDUsize = bytes[1];
+		byte[] bytes1 = resp1.getBytes();
+		int nbAPDUMax = (short)((short)bytes1[0]&(short)255);
+		int lastAPDUsize = (short)((short)bytes1[1]&(short)255);
 		System.out.println("RECEPTION: nbAPDUMAx: "+nbAPDUMax+"; lastAPDUsize: "+lastAPDUsize);
 
 
