@@ -29,12 +29,15 @@ public class TheClient {
 
 	final static short MAXLENGTH = 255;
 	final static short CIPHER_MAXLENGTH = 240;
+	
 	static final byte P1_FILENAME 	 	= (byte)0x01;
 	static final byte P1_BLOC 	 		= (byte)0x02;
 	static final byte P1_VAR 	 		= (byte)0x03;
 	static final byte P1_LASTBLOCK 	 	= (byte)0x04;
 	static final byte P1_NBFILES		= (byte)0x05;
 	static final byte P1_FILEINFO		= (byte)0x06;
+	static final byte P1_OFFSET 	 	= (byte)0x07;
+	
 	static 	byte[] dataBlock = new byte[MAXLENGTH];
 	static 	byte[] cipherdataBlock = new byte[CIPHER_MAXLENGTH];
 
@@ -317,22 +320,69 @@ public class TheClient {
 
 	void readFileFromCard() {
 
+		String input ="";
+		int nbFiles = 0;
+		int filerequested = 0;
+
+
+						/*Get Number of File*/
+						byte[] command0 = {CLA,LISTINGFILE, P1_NBFILES,P2,0x00};
+						CommandAPDU cmd0 = new CommandAPDU( command0);
+						ResponseAPDU resp0 = this.sendAPDU( cmd0, DISPLAY );
+				
+						byte[] bytes0 = resp0.getBytes();
+						String msg = "";
+						for(int i=0; i<bytes0.length-2;i++)
+							msg += new StringBuffer("").append((char)(bytes0[i]+48));
+						System.out.println("Number of Files: "+msg);
+				
+						nbFiles =Integer.parseInt(msg);
+						/*end*/
+
+						if(nbFiles == 0){
+							System.out.println("Error: No file onboard !");
+							return;
+						}
+
+				do{
+					System.out.println("Select your file (number):");
+					input = readKeyboard();
+				}while(!isNumeric(input));
+				filerequested = Integer.parseInt(input);
+
+
+				if(filerequested<0 || filerequested>(nbFiles-1)){
+					System.out.println("Error invalid file number");
+					return;
+				}else{
+					System.out.println("Valid file number (nbFiles: "+nbFiles+") (RequestNumber: "+filerequested+")");
+				}
+
+				/* Send OFFSET to Applet */
+				System.out.println("==========Requete: Sending OFFSET==========");
+				byte[] command = {CLA,READFILEFROMCARD, P1_OFFSET,(byte)filerequested}; 
+				CommandAPDU cmd = new CommandAPDU( command);
+				ResponseAPDU resp = this.sendAPDU( cmd, DISPLAY );
+				System.out.println("==========Fin Requete: Sending OFFSET==========");
+				/* end */
+
+
 		/* Read filename */
 		System.out.println("==========Requete: Filename==========");
-		byte[] header = {CLA,READFILEFROMCARD, P1_FILENAME,P2}; 
-		byte[] optional = {0x00};
-		byte[] command = new byte[(byte)header.length + (byte)optional.length];
-		System.arraycopy(header,(byte)0,command,(byte)0,(byte)header.length);
-		System.arraycopy(optional,(byte)0,command,(byte)header.length,(byte)optional.length);
-		CommandAPDU cmd = new CommandAPDU( command);
-		ResponseAPDU resp = this.sendAPDU( cmd, DISPLAY );
+		byte[] header10 = {CLA,READFILEFROMCARD, P1_FILENAME,P2}; 
+		byte[] optional10 = {0x00};
+		byte[] command10 = new byte[(byte)header10.length + (byte)optional10.length];
+		System.arraycopy(header10,(byte)0,command10,(byte)0,(byte)header10.length);
+		System.arraycopy(optional10,(byte)0,command10,(byte)header10.length,(byte)optional10.length);
+		CommandAPDU cmd10 = new CommandAPDU( command10);
+		ResponseAPDU resp10 = this.sendAPDU( cmd10, DISPLAY );
 		System.out.println("==========Fin Requete: Filename==========");
 		/* end */
 
-		byte[] bytes = resp.getBytes();
+		byte[] bytes10 = resp10.getBytes();
 		String filename = "";
-	    for(int i=0; i<bytes.length-2;i++)
-		filename += new StringBuffer("").append((char)bytes[i]);
+	    for(int i=0; i<bytes10.length-2;i++)
+		filename += new StringBuffer("").append((char)bytes10[i]);
 
 
 
@@ -348,9 +398,9 @@ public class TheClient {
 		System.out.println("==========Fin Requete: Valeurs Variables==========");
 		/* end */
 
-		bytes = resp1.getBytes();
-		int nbAPDUMax = bytes[0];
-		int lastAPDUsize = bytes[1];
+		byte[] bytes1 = resp1.getBytes();
+		int nbAPDUMax = (short)((short)bytes1[0]&(short)255);
+		int lastAPDUsize = (short)((short)bytes1[1]&(short)255);
 		System.out.println("RECEPTION: nbAPDUMAx: "+nbAPDUMax+"; lastAPDUsize: "+lastAPDUsize);
 
 
@@ -371,8 +421,6 @@ public class TheClient {
 				System.out.println("==========Fin Requete: Bloc==========");
 				/* end */
 
-				//short offset = (short)((((byte)1 + (byte)8) + (byte)2) + ((byte)(indice) * (byte)MAXLENGTH));
-				//System.out.println("L'Offset coté applet etait de: "+offset);
 
 				byte[] block = resp2.getBytes();
 				
@@ -602,7 +650,7 @@ public class TheClient {
 		System.out.println( "6: Changer DES key" );
 		System.out.println( "5: Uncipher file using DES" );
 		System.out.println( "4: Cipher file using DES" );
-		System.out.println( "3: Read file from card (saisie clavier du numero)" );
+		System.out.println( "3: Read file from card" );
 		System.out.println( "2: Write file to card" );
 		System.out.println( "1: Listing Files" );
 		System.out.println( "0: Quitter" );
@@ -684,6 +732,24 @@ private static String getFileChecksum(MessageDigest digest, File file) throws IO
      
     //return complete hash
    return sb.toString();
+}
+
+
+private static boolean isNumeric(String str) {
+
+	// null or empty
+	if (str == null || str.length() == 0) {
+		return false;
+	}
+
+	for (char c : str.toCharArray()) {
+		if (!Character.isDigit(c)) {
+			return false;
+		}
+	}
+
+	return true;
+
 }
 
 }

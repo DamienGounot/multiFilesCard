@@ -27,10 +27,13 @@ public class TheApplet extends Applet {
 	static final byte P1_LASTBLOCK 		= (byte)0x04;
 	static final byte P1_NBFILES		= (byte)0x05;
 	static final byte P1_FILEINFO		= (byte)0x06;
-
+	static final byte P1_OFFSET 	 	= (byte)0x07;
+	
 	static byte[] file = new byte[16384]; // 16Ko
 	private final static byte INS_DES_ECB_NOPAD_ENC           	= (byte)0x20;
-    private final static byte INS_DES_ECB_NOPAD_DEC           	= (byte)0x21;
+	private final static byte INS_DES_ECB_NOPAD_DEC           	= (byte)0x21;
+	
+	public static short OFFSET_VALUE = 0;
 
 
 
@@ -155,16 +158,34 @@ public class TheApplet extends Applet {
 		apdu.setIncomingAndReceive();
 		
 		switch(buffer[2]){
+
+			case P1_OFFSET:
+			OFFSET_VALUE = 0;
+			byte filenameSize = 0;
+			byte nbAPDU = 0;
+			short lastAPDUsize = 0;
+
+			for (byte i = 0; i < buffer[3]; i++) {
+
+				filenameSize = file[(short)(OFFSET_VALUE+(short)1)];
+				nbAPDU = file[(short)(OFFSET_VALUE + (short)filenameSize + (short)2)];
+				lastAPDUsize = file[(short)(OFFSET_VALUE + (short)filenameSize + (short)3)];
+
+				OFFSET_VALUE = (short)(OFFSET_VALUE + (short)((short)filenameSize + (short)3 + (short)((short)nbAPDU * (short)MAXLENGTH) + (short)(lastAPDUsize&(short)255))); //GOOD
+			}
+
+			break;
 			case P1_FILENAME:
 				/* envoi filename */
-				Util.arrayCopy(file, (byte)1, buffer, (byte)0, file[0]);
-				apdu.setOutgoingAndSend((short)0, file[0]);
+				Util.arrayCopy(file, (short)(OFFSET_VALUE+(short)2), buffer, (byte)0, file[(short)(OFFSET_VALUE+(short)1)]);
+				apdu.setOutgoingAndSend((short)0, file[(short)(OFFSET_VALUE+(short)1)]);
 				/* end */
 			break;
 			case P1_BLOC:
 
 					/* envoi d'un bloc */
-					short offset = (short)((((byte)1 + file[0] + (byte)2) + (buffer[3] * (short)MAXLENGTH)));
+					//short offset = (short)((((byte)1 + file[0] + (byte)2) + (buffer[3] * (short)MAXLENGTH)));
+					short offset = (short)(OFFSET_VALUE+(short)1+(short)file[(short)(OFFSET_VALUE+(short)1)]+(short)3+(short)(buffer[3] * (short)MAXLENGTH));
 					buffer = apdu.getBuffer();
 					Util.arrayCopy(file, offset, buffer, (byte)0, (short)MAXLENGTH);
 					apdu.setOutgoingAndSend((short)0, (short)MAXLENGTH);
@@ -174,19 +195,20 @@ public class TheApplet extends Applet {
 
 					
 					/* envoi du dernier bloc */
-					byte nbAPDUMax = file[(byte)(file[0]+(byte)1)];
-					byte lastAPDUsize = file[(byte)(file[0]+(byte)2)];
-
-					short offset_last = (short)((((byte)1 + (byte)file[0]) + (byte)2) + ((byte)(nbAPDUMax) * (short)MAXLENGTH));
-					
+					//byte nbAPDUMax = file[(byte)(file[0]+(byte)1)];
+					//byte lastAPDU = file[(byte)(file[0]+(byte)2)];
+					byte nbAPDUMAx = file[(short)(OFFSET_VALUE+(short)1+(short)file[(short)(OFFSET_VALUE+(short)1)]+(short)1)];
+					byte lastAPDU = file[(short)(OFFSET_VALUE+(short)1+(short)file[(short)(OFFSET_VALUE+(short)1)]+(short)2)];
+					//short offset_last = (short)((((byte)1 + (byte)file[0]) + (byte)2) + ((byte)(nbAPDUMax) * (short)MAXLENGTH));
+					short offset_last = (short)(OFFSET_VALUE+(short)1+(short)file[(short)(OFFSET_VALUE+(short)1)]+(short)3+(short)(nbAPDUMAx * (short)MAXLENGTH));
 					buffer = apdu.getBuffer();
-					Util.arrayCopy(file, offset_last, buffer, (byte)0, (short)(lastAPDUsize&(short)255));
-					apdu.setOutgoingAndSend((short)0, (short)(lastAPDUsize&(short)255));
+					Util.arrayCopy(file, offset_last, buffer, (byte)0, (short)(lastAPDU&(short)255));
+					apdu.setOutgoingAndSend((short)0, (short)(lastAPDU&(short)255));
 					/* end */			
 			break;
 			case P1_VAR:
 				/* envoi parametre nbAPDUMax et lastAPDUsize */
-				Util.arrayCopy(file, (byte)(file[0]+(byte)1), buffer, (byte)0, (byte)2);
+				Util.arrayCopy(file, (short)(OFFSET_VALUE+(short)2+(short)file[(short)(OFFSET_VALUE+(short)1)]), buffer, (byte)0, (byte)2);
 				apdu.setOutgoingAndSend((short)0, (byte)2);
 				/* end */
 			break;
