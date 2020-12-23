@@ -20,7 +20,6 @@ public class TheClient {
 	static final byte P1					= (byte)0x00;
 	static final byte P2					= (byte)0x00;
 
-	static final byte COMPAREFILES 				= (byte)0x07;
 	static final byte UPDATECARDKEY				= (byte)0x06;
 	static final byte UNCIPHERFILEBYCARD		= (byte)0x05;
 	static final byte CIPHERFILEBYCARD			= (byte)0x04;
@@ -33,7 +32,9 @@ public class TheClient {
 	static final byte P1_FILENAME 	 	= (byte)0x01;
 	static final byte P1_BLOC 	 		= (byte)0x02;
 	static final byte P1_VAR 	 		= (byte)0x03;
-	static final byte P1_LASTBLOCK 	 		= (byte)0x04;
+	static final byte P1_LASTBLOCK 	 	= (byte)0x04;
+	static final byte P1_NBFILES		= (byte)0x05;
+	static final byte P1_FILEINFO		= (byte)0x06;
 	static 	byte[] dataBlock = new byte[MAXLENGTH];
 	static 	byte[] cipherdataBlock = new byte[CIPHER_MAXLENGTH];
 
@@ -474,7 +475,6 @@ public class TheClient {
 				/* envoi du DERNIER bloc */
 				System.out.println("==========Requete: Bloc==========");
 				byte[] header2 = {CLA,WRITEFILETOCARD,P1_BLOC,(byte)nbAPDUMax}; // requete de type "bloc" (contient un bloc de lastAPDUsize octets) avec P2 = indice du bloc
-				
 				byte[] optional2 = new byte[(byte)1 + lastAPDUsize];
 
 				byte[] command2 = new byte[header2.length + optional2.length];
@@ -490,7 +490,8 @@ public class TheClient {
 				System.out.println("==========Fin Requete: Bloc==========");
 				/* end */
 
-				
+
+
 				System.out.println("nbAPDUMax :"+nbAPDUMax+"; lastAPDUsize :"+lastAPDUsize+"; Total length: "+(nbAPDUMax*MAXLENGTH+lastAPDUsize)+"bytes");
 
 
@@ -519,6 +520,35 @@ public class TheClient {
 
 	void listingFile(){
 
+		byte[] command = {CLA,LISTINGFILE, P1_NBFILES,P2,0x00};
+		CommandAPDU cmd = new CommandAPDU( command);
+		ResponseAPDU resp = this.sendAPDU( cmd, DISPLAY );
+
+		byte[] bytes = resp.getBytes();
+		String msg = "";
+	    for(int i=0; i<bytes.length-2;i++)
+		    msg += new StringBuffer("").append((char)(bytes[i]+48));
+		System.out.println("Number of Files: "+msg);
+
+		int nbFiles =Integer.parseInt(msg);
+
+		for (int i = 0; i < nbFiles; i++) {
+
+			byte[] commandi = {CLA,LISTINGFILE, P1_FILEINFO, (byte)i, 0x00 };
+			CommandAPDU cmdi = new CommandAPDU( commandi);
+			ResponseAPDU respi = this.sendAPDU( cmdi, DISPLAY );
+
+			byte[] bytesi = respi.getBytes();
+			System.out.println("indice: "+bytesi[0]+"\t nbAPDUMax: "+(short)((short)bytesi[1]&(short)255));
+			System.out.println("indice: "+bytesi[0]+"\t lastAPDUsize: "+(short)((short)bytesi[2]&(short)255));
+			System.out.println("indice: "+bytesi[0]+"\t namesize: "+(short)((short)bytesi[3]&(short)255));
+			System.out.print("File number: "+bytesi[0]+"\t size: "+((((short)((short)bytesi[1]&(short)255))*MAXLENGTH)+((short)bytesi[2]&(short)255))+" bytes\t filename: ");
+			msg = "";
+	    	 for(int j=4; j<4+bytesi[3];j++)
+		     msg += new StringBuffer("").append((char)(bytesi[j]));
+			 System.out.println(msg);
+
+		}	
 	}
 
 	void exit() {
