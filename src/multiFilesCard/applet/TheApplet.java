@@ -181,29 +181,31 @@ public class TheApplet extends Applet {
 				apdu.setOutgoingAndSend((short)0, file[(short)(OFFSET_VALUE+(short)1)]);
 				/* end */
 			break;
-			// case P1_BLOC:
+			case P1_BLOC:
 
-			// 		/* envoi d'un bloc */
-			// 		short offset = (short)((((byte)1 + file[0] + (byte)2) + (buffer[3] * (short)MAXLENGTH)));
-			// 		buffer = apdu.getBuffer();
-			// 		Util.arrayCopy(file, offset, buffer, (byte)0, (short)MAXLENGTH);
-			// 		apdu.setOutgoingAndSend((short)0, (short)MAXLENGTH);
-			// 		/* end */
-			// break;
-			// case P1_LASTBLOCK:
+					/* envoi d'un bloc */
+					//short offset = (short)((((byte)1 + file[0] + (byte)2) + (buffer[3] * (short)MAXLENGTH)));
+					short offset = (short)(OFFSET_VALUE+(short)1+(short)file[(short)(OFFSET_VALUE+(short)1)]+(short)3+(short)(buffer[3] * (short)MAXLENGTH));
+					buffer = apdu.getBuffer();
+					Util.arrayCopy(file, offset, buffer, (byte)0, (short)MAXLENGTH);
+					apdu.setOutgoingAndSend((short)0, (short)MAXLENGTH);
+					/* end */
+			break;
+			case P1_LASTBLOCK:
 
 					
-			// 		/* envoi du dernier bloc */
-			// 		byte nbAPDUMax = file[(byte)(file[0]+(byte)1)];
-			// 		byte lastAPDU = file[(byte)(file[0]+(byte)2)];
-
-			// 		short offset_last = (short)((((byte)1 + (byte)file[0]) + (byte)2) + ((byte)(nbAPDUMax) * (short)MAXLENGTH));
-					
-			// 		buffer = apdu.getBuffer();
-			// 		Util.arrayCopy(file, offset_last, buffer, (byte)0, (short)(lastAPDU&(short)255));
-			// 		apdu.setOutgoingAndSend((short)0, (short)(lastAPDU&(short)255));
-			// 		/* end */			
-			// break;
+					/* envoi du dernier bloc */
+					//byte nbAPDUMax = file[(byte)(file[0]+(byte)1)];
+					//byte lastAPDU = file[(byte)(file[0]+(byte)2)];
+					byte nbAPDUMAx = file[(short)(OFFSET_VALUE+(short)1+(short)file[(short)(OFFSET_VALUE+(short)1)]+(short)1)];
+					byte lastAPDU = file[(short)(OFFSET_VALUE+(short)1+(short)file[(short)(OFFSET_VALUE+(short)1)]+(short)2)];
+					//short offset_last = (short)((((byte)1 + (byte)file[0]) + (byte)2) + ((byte)(nbAPDUMax) * (short)MAXLENGTH));
+					short offset_last = (short)(OFFSET_VALUE+(short)1+(short)file[(short)(OFFSET_VALUE+(short)1)]+(short)3+(short)(nbAPDUMAx * (short)MAXLENGTH));
+					buffer = apdu.getBuffer();
+					Util.arrayCopy(file, offset_last, buffer, (byte)0, (short)(lastAPDU&(short)255));
+					apdu.setOutgoingAndSend((short)0, (short)(lastAPDU&(short)255));
+					/* end */			
+			break;
 			case P1_VAR:
 				/* envoi parametre nbAPDUMax et lastAPDUsize */
 				Util.arrayCopy(file, (short)(OFFSET_VALUE+(short)2+(short)file[(short)(OFFSET_VALUE+(short)1)]), buffer, (byte)0, (byte)2);

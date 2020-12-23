@@ -421,8 +421,6 @@ public class TheClient {
 				System.out.println("==========Fin Requete: Bloc==========");
 				/* end */
 
-				//short offset = (short)((((byte)1 + (byte)8) + (byte)2) + ((byte)(indice) * (byte)MAXLENGTH));
-				//System.out.println("L'Offset coté applet etait de: "+offset);
 
 				byte[] block = resp2.getBytes();
 				
@@ -652,7 +650,7 @@ public class TheClient {
 		System.out.println( "6: Changer DES key" );
 		System.out.println( "5: Uncipher file using DES" );
 		System.out.println( "4: Cipher file using DES" );
-		System.out.println( "3: Read file from card (saisie clavier du numero)" );
+		System.out.println( "3: Read file from card" );
 		System.out.println( "2: Write file to card" );
 		System.out.println( "1: Listing Files" );
 		System.out.println( "0: Quitter" );
